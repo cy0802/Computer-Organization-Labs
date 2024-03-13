@@ -17,6 +17,7 @@ module ALUCtrl (
                     4'b0_111: ALUCtl = 4'b0000; // and
                     4'b1_000: ALUCtl = 4'b0110; // sub
                     4'b0_000: ALUCtl = 4'b0010; // add
+                    default: ALUCtl = 4'b0010; // add
                 endcase
             2'b01: ALUCtl = 4'b0110; // sub
             default: ALUCtl = 4'b0010; // add

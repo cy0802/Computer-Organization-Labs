@@ -7,6 +7,7 @@ module PC (
 
     // TODO: implement your program counter here
     
+    /* verilator lint_off SYNCASYNCNET */
     // not sure if this is correct
     always @(posedge clk) begin
         if (!rst) begin
