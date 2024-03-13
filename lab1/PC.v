@@ -7,13 +7,12 @@ module PC (
 
     // TODO: implement your program counter here
     
+    // not sure if this is correct
     always @(posedge clk) begin
-        if (!rst) 
-            begin
+        if (!rst) begin
                 pc_o <= 32'b0;
             end 
-        else 
-            begin
+        else begin
                 pc_o <= pc_i;
             end
     end

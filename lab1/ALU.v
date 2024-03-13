@@ -10,6 +10,7 @@ module ALU (
     // TODO: implement your ALU here
     // Hint: you can use operator to implement
 
+    // done
     assign zero = (ALUOut == 0);
     always @ (ALUctl, A, B) begin
         case (ALUctl)
