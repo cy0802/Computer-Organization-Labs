@@ -16,7 +16,7 @@ module ImmGen (
             // S-type instructions
             7'b0100011: imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
             // B-type instructions
-            7'b1100011: imm = {{19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+            7'b1100011: imm = {1'b0, {19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8]};
             default: imm = {32{1'b0}}; // for R-type and other instructions
         endcase
     end
