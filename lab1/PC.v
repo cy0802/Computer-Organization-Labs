@@ -9,7 +9,7 @@ module PC (
     
     /* verilator lint_off SYNCASYNCNET */
     // not sure if this is correct
-    always @(posedge clk) begin
+    always @ (posedge clk, negedge rst) begin
         if (!rst) begin
                 pc_o <= 32'b0;
             end 

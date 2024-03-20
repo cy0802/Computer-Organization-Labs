@@ -24,6 +24,16 @@ module Control (
                     ALUSrc = 1'b0;
                     regWrite = 1'b1;
                 end
+            7'b0010011: // I-type
+                begin
+                    branch = 1'b0;
+                    memRead = 1'b0;
+                    memtoReg = 1'b0;
+                    ALUOp = 2'b11;
+                    memWrite = 1'b0;
+                    ALUSrc = 1'b1;
+                    regWrite = 1'b1;
+                end
             7'b0000011: // lw
                 begin
                     branch = 1'b0;

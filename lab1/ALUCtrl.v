@@ -17,9 +17,18 @@ module ALUCtrl (
                     4'b0_111: ALUCtl = 4'b0000; // and
                     4'b1_000: ALUCtl = 4'b0110; // sub
                     4'b0_000: ALUCtl = 4'b0010; // add
+                    4'b0_010: ALUCtl = 4'b0111; // stl
                     default: ALUCtl = 4'b0010; // add
                 endcase
-            2'b01: ALUCtl = 4'b0110; // sub
+            2'b01: ALUCtl = 4'b0110; // beq
+            2'b11: // I-type
+                case ({funct3})
+                    3'b010: ALUCtl = 4'b0111; // slti
+                    3'b000: ALUCtl = 4'b0010; // addi 
+                    3'b110: ALUCtl = 4'b0001; // ori 
+                    3'b111: ALUCtl = 4'b0000; // andi
+                    default: ALUCtl = 4'b0010; // add 
+                endcase
             default: ALUCtl = 4'b0010; // add
         endcase
     end
