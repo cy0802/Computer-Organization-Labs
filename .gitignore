@@ -1,6 +1,6 @@
-lab1/TEST_INSTRUCTIONS.asm
-lab1/obj_dir/
 *.zip
-lab2/.vscode/
-lab2/TEST_INSTRUCTIONS.asm
+TEST_INSTRUCTIONS.*
 *.exe
+inst*
+.vscode
+obj_dir
