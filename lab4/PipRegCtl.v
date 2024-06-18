@@ -2,7 +2,6 @@ module PipRegCtl (
     input wire clk,
     input wire rst,
     
-    input flush,
     input memRead,
     input memWrite,
     input [1:0] ASel,
@@ -12,7 +11,6 @@ module PipRegCtl (
     input regWrite,
     input [1:0] writeBackSel,
 
-    output reg flush_out,
     output reg memRead_out,
     output reg memWrite_out,
     output reg [1:0] ASel_out,
@@ -24,8 +22,7 @@ module PipRegCtl (
 );
 
     always @(posedge clk, negedge rst) begin
-        if (!rst)
-            flush_out <= 1'b0;
+        if (!rst) begin
             memRead_out <= 1'b0;
             memWrite_out <= 1'b0;
             ASel_out <= 2'b00;
@@ -34,8 +31,7 @@ module PipRegCtl (
             ALUOp_out <= 1'b0;
             regWrite_out <= 1'b0;
             writeBackSel_out <= 2'b00;
-        else
-            flush_out <= flush;
+        end else begin 
             memRead_out <= memRead;
             memWrite_out <= memWrite;
             ASel_out <= ASel;
@@ -44,6 +40,7 @@ module PipRegCtl (
             ALUOp_out <= ALUOp;
             regWrite_out <= regWrite;
             writeBackSel_out <= writeBackSel;
+        end
     end
 
 endmodule

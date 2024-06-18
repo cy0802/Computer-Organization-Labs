@@ -3,7 +3,6 @@
 module BranchCmp(
     input [31:0] data1,
     input [31:0] data2,
-    input BrUn,
     output reg BrLT,
     output reg BrEQ,
 );
