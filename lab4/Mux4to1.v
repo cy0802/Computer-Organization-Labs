@@ -1,4 +1,4 @@
-module Mux4to2 #(
+module Mux4to1 #(
     parameter size = 32
 ) 
 (
@@ -9,7 +9,6 @@ module Mux4to2 #(
     input signed [size-1:0] s3,
     output signed [size-1:0] out
 );
-    // TODO: implement your 4to2 multiplexer here
     // done
     assign out = sel[1] ? (sel[0] ? s3 : s2) : (sel[0] ? s1 : s0);
 endmodule
