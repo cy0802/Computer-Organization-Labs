@@ -7,9 +7,9 @@ module Control(
     output reg memRead,
     output reg memWrite,
     output reg [1:0] ASel,
-    output reg [1:0] Bsel,
+    output reg [1:0] BSel,
     output reg pcSel,
-    output reg ALUOp,
+    output reg [1:0] ALUOp,
     output reg regWrite,
     output reg [1:0] writeBackSel
 );
@@ -21,7 +21,7 @@ always @(*) begin
             memRead = 1'b0;
             memWrite = 1'b0;
             ASel = 2'b01;
-            Bsel = 2'b01;
+            BSel = 2'b01;
             pcSel = 1'b1;
             ALUOp = 2'b00;
             regWrite = 1'b1;
@@ -32,7 +32,7 @@ always @(*) begin
             memRead = 1'b0;
             memWrite = 1'b0;
             ASel = 2'b00;
-            Bsel = 2'b01;
+            BSel = 2'b01;
             pcSel = 1'b1;
             ALUOp = 2'b00;
             regWrite = 1'b1;
@@ -45,7 +45,7 @@ always @(*) begin
             BSel = 2'b01;
             ALUOp = 2'b00;
             regWrite = 1'b0;
-            WriteBackSel = 2'b00; // dont care
+            writeBackSel = 2'b00; // dont care
             case(funct3)
                 3'b000: begin // beq
                     pcSel = breq ? 1'b1 : 1'b0;
@@ -63,6 +63,10 @@ always @(*) begin
                     pcSel = brlt ? 1'b0 : 1'b1;
                     flush = brlt ? 1'b1 : 1'b0;
                 end
+                default: begin
+                    pcSel = 1'b0;
+                    flush = 1'b0;
+                end
             endcase
         end
         7'b0000011: begin // lw
@@ -70,7 +74,7 @@ always @(*) begin
             memRead = 1'b1;
             memWrite = 1'b0;
             ASel = 2'b00;
-            Bsel = 2'b01;
+            BSel = 2'b01;
             pcSel = 1'b0;
             ALUOp = 2'b00;
             regWrite = 1'b1;
@@ -81,7 +85,7 @@ always @(*) begin
             memRead = 1'b0;
             memWrite = 1'b1;
             ASel = 2'b00;
-            Bsel = 2'b01;
+            BSel = 2'b01;
             pcSel = 1'b0;
             ALUOp = 2'b00;
             regWrite = 1'b0;
@@ -92,7 +96,7 @@ always @(*) begin
             memRead = 1'b0;
             memWrite = 1'b0;
             ASel = 2'b00;
-            Bsel = 2'b01;
+            BSel = 2'b01;
             pcSel = 1'b0;
             ALUOp = 2'b11;
             regWrite = 1'b1;
@@ -103,7 +107,7 @@ always @(*) begin
             memRead = 1'b0;
             memWrite = 1'b0;
             ASel = 2'b00;
-            Bsel = 2'b00;
+            BSel = 2'b00;
             pcSel = 1'b0;
             ALUOp = 2'b10;
             regWrite = 1'b1;
@@ -114,7 +118,7 @@ always @(*) begin
             memRead = 1'b0;
             memWrite = 1'b0;
             ASel = 2'b00;
-            Bsel = 2'b00;
+            BSel = 2'b00;
             pcSel = 1'b0;
             ALUOp = 2'b00;
             regWrite = 1'b0;

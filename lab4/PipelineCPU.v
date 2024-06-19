@@ -11,16 +11,17 @@ module PipelineCPU (
 // The following provides simple template,
 // you can modify it as you wish except I/O pin and register module
 
+/* verilator lint_off UNUSEDSIGNAL */
 wire [31:0] pcPlus4, pcOutput, pcInput, pc_IFID, pc_IDEX, pc_EXMEM, pcPlus4_EXMEM, pcPlus4_MEMWB;
 wire [31:0] inst, inst_IFID, inst_IDEX, imm, imm_IDEX, readData1, readData2, rs2_IDEX, rs2_EXMEM, rs1_IDEX;
-wire [4:0] rd_EXMEM, rd_EXMEM;
-wire [31:0] ALUOut, ALU_EXMEM, readData, readData_MEMWB, ALU_EXMEM, ALU_MEMWB, WBData, muxA, muxB;
+wire [4:0] rd_EXMEM, rd_MEMWB;
+wire [31:0] ALUOut, ALU_EXMEM, readData, readData_MEMWB, ALU_EXMEM, ALU_MEMWB, WBData, muxA, muxB, fwdMux_out;
 wire [3:0] ALUCtl;
-wire [1:0] ASel, ASel_IDEX, ASel_EXMEM, ASel_MEMWB, BSel, BSel_IDEX, BSel_EXMEM, BSel_MEMWB, forwardA, forwardB;
-wire [1:0] ALUOp, ALUOp_IDEX, ALUOp_EXMEM, ALUOp_MEMWB, WBSel, WBSel_IDEX, WBSel_EXMEM, WBSel_MEMWB;
-wire flush, pcEnable, rstCtl_IDEX, brEq, brLt;
-wire memRead, memRead_IDEX, memRead_EXMEM, memRead_MEMWB, memWrite, memWrite_IDEX, memWrite_EXMEM, memWrite_MEMWB;
-wire pcSel, pcSel_IDEX, pcSel_EXMEM, pcSel_MEMWB, regWrite, regWrite_IDEX, regWrite_EXMEM, regWrite_MEMWB;
+wire [1:0] ASel, ASel_mux, ASel_IDEX, ASel_EXMEM, ASel_MEMWB, BSel, BSel_mux, BSel_IDEX, BSel_EXMEM, BSel_MEMWB, forwardA, forwardB;
+wire [1:0] ALUOp, ALUOp_mux, ALUOp_IDEX, ALUOp_EXMEM, ALUOp_MEMWB, WBSel, WBSel_mux, WBSel_IDEX, WBSel_EXMEM, WBSel_MEMWB, forward_mux;
+wire flush, flush_mux, pcEnable, rstCtl_IDEX, brEq, brLt;
+wire memRead, memRead_mux, memRead_IDEX, memRead_EXMEM, memRead_MEMWB, memWrite, memWrite_mux, memWrite_IDEX, memWrite_EXMEM, memWrite_MEMWB;
+wire pcSel, pcSel_mux, pcSel_IDEX, pcSel_EXMEM, pcSel_MEMWB, regWrite, regWrite_mux, regWrite_IDEX, regWrite_EXMEM, regWrite_MEMWB;
 
 PC m_PC(
     .clk(clk),
@@ -51,7 +52,7 @@ Control m_Control(
     .memRead(memRead),
     .memWrite(memWrite),
     .ASel(ASel),
-    .Bsel(BSel),
+    .BSel(BSel),
     .pcSel(pcSel),
     .ALUOp(ALUOp),
     .regWrite(regWrite),
@@ -84,6 +85,14 @@ ImmGen m_ImmGen(
     .imm(imm)
 );
 
+Mux4to1 #(.size(32)) m_Mux_fwd(
+    .sel(forward_mux),
+    .s0(rs2_IDEX),
+    .s1(WBData),
+    .s2(ALU_EXMEM),
+    .s3(32'b0),
+    .out(fwdMux_out)
+);
 
 Mux2to1 #(.size(32)) m_Mux_PC(
     .sel(pcSel_IDEX),
@@ -93,7 +102,7 @@ Mux2to1 #(.size(32)) m_Mux_PC(
 );
 
 Mux4to1 #(.size(32)) m_Mux_ALU_A(
-    .sel(ASel),
+    .sel(forwardA),
     .s0(rs1_IDEX),
     .s1(pc_IDEX),
     .s2(WBData),
@@ -102,7 +111,7 @@ Mux4to1 #(.size(32)) m_Mux_ALU_A(
 );
 
 Mux4to1 #(.size(32)) m_Mux_ALU_B(
-    .sel(BSel),
+    .sel(forwardB),
     .s0(rs2_IDEX),
     .s1(imm_IDEX),
     .s2(WBData),
@@ -140,7 +149,7 @@ BranchCmp m_BranchCmp(
     .BrLT(brLt),
     .BrEQ(brEq)
 );
-Mux4to2 #(.size(32)) m_Mux_mem(
+Mux4to1 #(.size(32)) m_Mux_mem(
     .sel(WBSel_MEMWB),
     .s0(readData_MEMWB),
     .s1(ALU_MEMWB),
@@ -157,7 +166,8 @@ Forward m_Forward(
     .ASel(ASel_IDEX),
     .BSel(BSel_IDEX),
     .forwardA(forwardA),
-    .forwardB(forwardB)
+    .forwardB(forwardB),
+    .forward_mux(forward_mux)
 );
 
 HazardDetect m_HazardDetect(
@@ -169,17 +179,42 @@ HazardDetect m_HazardDetect(
     .PCEnable(pcEnable)
 );
 
+CtlMux m_CtlMux(
+    .sel(rstCtl_IDEX),
+    .flush(flush),
+    .memRead(memRead),
+    .memWrite(memWrite),
+    .ASel(ASel),
+    .BSel(BSel),
+    .pcSel(pcSel),
+    .ALUOp(ALUOp),
+    .regWrite(regWrite),
+    .writeBackSel(WBSel),
+
+    .flush_o(flush_mux),
+    .memRead_o(memRead_mux),
+    .memWrite_o(memWrite_mux),
+    .ASel_o(ASel_mux),
+    .BSel_o(BSel_mux),
+    .pcSel_o(pcSel_mux),
+    .ALUOp_o(ALUOp_mux),
+    .regWrite_o(regWrite_mux),
+    .writeBackSel_o(WBSel_mux)
+);
+
 // ------- Pipeline Register -------
 
-PipReg32b m_PC_IFID(
+PipReg32bEn m_PC_IFID(
     .clk(clk),
     .rst(flush),
+    .enable(pcEnable),
     .data_in(pcOutput),
     .data_out(pc_IFID)
 );
-PipReg32b m_inst_IFID(
+PipReg32bEn m_inst_IFID(
     .clk(clk),
     .rst(flush),
+    .enable(pcEnable),
     .data_in(inst),
     .data_out(inst_IFID)
 );
@@ -228,7 +263,7 @@ PipReg32b m_ALU_EXMEM(
 PipReg32b m_rs2_EXMEM(
     .clk(clk),
     .rst(start),
-    .data_in(rs2_IDEX),
+    .data_in(fwdMux_out),
     .data_out(rs2_EXMEM)
 );
 PipReg5b m_rd_EXMEM(
@@ -270,21 +305,21 @@ Adder m_Adder_2(
 
 PipRegCtl m_Ctl_IDEX(
     .clk(clk),
-    .rst(rstCtl_IDEX),
+    .rst(start),
     
-    .memRead(memRead),
-    .memWrite(memWrite),
-    .ASel(ASel),
-    .Bsel(BSel),
-    .pcSel(pcSel),
-    .ALUOp(ALUOp),
-    .regWrite(regWrite),
-    .writeBackSel(WBSel),
+    .memRead(memRead_mux),
+    .memWrite(memWrite_mux),
+    .ASel(ASel_mux),
+    .BSel(BSel_mux),
+    .pcSel(pcSel_mux),
+    .ALUOp(ALUOp_mux),
+    .regWrite(regWrite_mux),
+    .writeBackSel(WBSel_mux),
     
     .memRead_out(memRead_IDEX),
     .memWrite_out(memWrite_IDEX),
     .ASel_out(ASel_IDEX),
-    .Bsel_out(BSel_IDEX),
+    .BSel_out(BSel_IDEX),
     .pcSel_out(pcSel_IDEX),
     .ALUOp_out(ALUOp_IDEX),
     .regWrite_out(regWrite_IDEX),
@@ -298,7 +333,7 @@ PipRegCtl m_Ctl_EXMEM(
     .memRead(memRead_IDEX),
     .memWrite(memWrite_IDEX),
     .ASel(ASel_IDEX),
-    .Bsel(BSel_IDEX),
+    .BSel(BSel_IDEX),
     .pcSel(pcSel_IDEX),
     .ALUOp(ALUOp_IDEX),
     .regWrite(regWrite_IDEX),
@@ -307,7 +342,7 @@ PipRegCtl m_Ctl_EXMEM(
     .memRead_out(memRead_EXMEM),
     .memWrite_out(memWrite_EXMEM),
     .ASel_out(ASel_EXMEM),
-    .Bsel_out(BSel_EXMEM),
+    .BSel_out(BSel_EXMEM),
     .pcSel_out(pcSel_EXMEM),
     .ALUOp_out(ALUOp_EXMEM),
     .regWrite_out(regWrite_EXMEM),
@@ -321,7 +356,7 @@ PipRegCtl m_Ctl_MEMWB(
     .memRead(memRead_EXMEM),
     .memWrite(memWrite_EXMEM),
     .ASel(ASel_EXMEM),
-    .Bsel(BSel_EXMEM),
+    .BSel(BSel_EXMEM),
     .pcSel(pcSel_EXMEM),
     .ALUOp(ALUOp_EXMEM),
     .regWrite(regWrite_EXMEM),
@@ -330,7 +365,7 @@ PipRegCtl m_Ctl_MEMWB(
     .memRead_out(memRead_MEMWB),
     .memWrite_out(memWrite_MEMWB),
     .ASel_out(ASel_MEMWB),
-    .Bsel_out(BSel_MEMWB),
+    .BSel_out(BSel_MEMWB),
     .pcSel_out(pcSel_MEMWB),
     .ALUOp_out(ALUOp_MEMWB),
     .regWrite_out(regWrite_MEMWB),
