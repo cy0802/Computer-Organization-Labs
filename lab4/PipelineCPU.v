@@ -15,13 +15,17 @@ module PipelineCPU (
 wire [31:0] pcPlus4, pcOutput, pcInput, pc_IFID, pc_IDEX, pc_EXMEM, pcPlus4_EXMEM, pcPlus4_MEMWB;
 wire [31:0] inst, inst_IFID, inst_IDEX, imm, imm_IDEX, readData1, readData2, rs2_IDEX, rs2_EXMEM, rs1_IDEX;
 wire [4:0] rd_EXMEM, rd_MEMWB;
-wire [31:0] ALUOut, ALU_EXMEM, readData, readData_MEMWB, ALU_EXMEM, ALU_MEMWB, WBData, muxA, muxB, readData1_IDEX, readData2_IDEX;
+wire [31:0] ALUOut, ALU_EXMEM, readData, readData_MEMWB, ALU_EXMEM, ALU_MEMWB, WBData;
+wire [31:0] muxA, muxB, readData1_IDEX, readData2_IDEX;
 wire [3:0] ALUCtl;
-wire [1:0] ASel, ASel_mux, ASel_IDEX, ASel_EXMEM, ASel_MEMWB, BSel, BSel_mux, BSel_IDEX, BSel_EXMEM, BSel_MEMWB, forwardA, forwardB;
-wire [1:0] ALUOp, ALUOp_mux, ALUOp_IDEX, ALUOp_EXMEM, ALUOp_MEMWB, WBSel, WBSel_mux, WBSel_IDEX, WBSel_EXMEM, WBSel_MEMWB, forward_muxA, forward_muxB;
+wire [1:0] ASel, ASel_mux, ASel_mux2, ASel_IDEX, ASel_EXMEM, ASel_MEMWB;
+wire [1:0] BSel, BSel_mux, BSel_mux2, BSel_IDEX, BSel_EXMEM, BSel_MEMWB, forwardA, forwardB;
+wire [1:0] ALUOp, ALUOp_mux, ALUOp_mux2, ALUOp_IDEX, ALUOp_EXMEM, ALUOp_MEMWB;
+wire [1:0] WBSel, WBSel_mux, WBSel_mux2, WBSel_IDEX, WBSel_EXMEM, WBSel_MEMWB, forward_muxA, forward_muxB;
 wire flush, pcEnable, rstCtl_IDEX;
-wire memRead, memRead_mux, memRead_IDEX, memRead_EXMEM, memRead_MEMWB, memWrite, memWrite_mux, memWrite_IDEX, memWrite_EXMEM, memWrite_MEMWB;
-wire pcSel, regWrite, regWrite_mux, regWrite_IDEX, regWrite_EXMEM, regWrite_MEMWB;
+wire memRead, memRead_mux, memRead_mux2, memRead_IDEX, memRead_EXMEM, memRead_MEMWB;
+wire memWrite, memWrite_mux, memWrite_mux2, memWrite_IDEX, memWrite_EXMEM, memWrite_MEMWB;
+wire pcSel, regWrite, regWrite_mux, regWrite_mux2, regWrite_IDEX, regWrite_EXMEM, regWrite_MEMWB;
 
 PC m_PC(
     .clk(clk),
@@ -189,7 +193,7 @@ HazardDetect m_HazardDetect(
     .PCEnable(pcEnable)
 );
 
-CtlMux m_CtlMux(
+CtlMux m_CtlMux_ID(
     .sel(rstCtl_IDEX),
     .memRead(memRead),
     .memWrite(memWrite),
@@ -206,6 +210,25 @@ CtlMux m_CtlMux(
     .ALUOp_o(ALUOp_mux),
     .regWrite_o(regWrite_mux),
     .writeBackSel_o(WBSel_mux)
+);
+
+CtlMux m_CtlMux_EX(
+    .sel(!flush),
+    .memRead(memRead_IDEX),
+    .memWrite(memWrite_IDEX),
+    .ASel(ASel_IDEX),
+    .BSel(BSel_IDEX),
+    .ALUOp(ALUOp_IDEX),
+    .regWrite(regWrite_IDEX),
+    .writeBackSel(WBSel_IDEX),
+
+    .memRead_o(memRead_mux2),
+    .memWrite_o(memWrite_mux2),
+    .ASel_o(ASel_mux2),
+    .BSel_o(BSel_mux2),
+    .ALUOp_o(ALUOp_mux2),
+    .regWrite_o(regWrite_mux2),
+    .writeBackSel_o(WBSel_mux2)
 );
 
 // ------- Pipeline Register -------
@@ -226,25 +249,25 @@ PipReg32bEn m_inst_IFID(
 );
 PipReg32b m_PC_IDEX(
     .clk(clk),
-    .rst(flush),
+    .rst(start),
     .data_in(pc_IFID),
     .data_out(pc_IDEX)
 );
 PipReg32b m_rs1_IDEX(
     .clk(clk),
-    .rst(flush),
+    .rst(start),
     .data_in(readData1),
     .data_out(rs1_IDEX)
 );
 PipReg32b m_rs2_IDEX(
     .clk(clk),
-    .rst(flush),
+    .rst(start),
     .data_in(readData2),
     .data_out(rs2_IDEX)
 );
 PipReg32b m_imm_IDEX(
     .clk(clk),
-    .rst(flush),
+    .rst(start),
     .data_in(imm),
     .data_out(imm_IDEX)
 );
@@ -311,7 +334,7 @@ Adder m_Adder_2(
 
 PipRegCtl m_Ctl_IDEX(
     .clk(clk),
-    .rst(flush),
+    .rst(start),
     
     .memRead(memRead_mux),
     .memWrite(memWrite_mux),
@@ -334,13 +357,13 @@ PipRegCtl m_Ctl_EXMEM(
     .clk(clk),
     .rst(start),
     
-    .memRead(memRead_IDEX),
-    .memWrite(memWrite_IDEX),
-    .ASel(ASel_IDEX),
-    .BSel(BSel_IDEX),
-    .ALUOp(ALUOp_IDEX),
-    .regWrite(regWrite_IDEX),
-    .writeBackSel(WBSel_IDEX),
+    .memRead(memRead_mux2),
+    .memWrite(memWrite_mux2),
+    .ASel(ASel_mux2),
+    .BSel(BSel_mux2),
+    .ALUOp(ALUOp_mux2),
+    .regWrite(regWrite_mux2),
+    .writeBackSel(WBSel_mux2),
     
     .memRead_out(memRead_EXMEM),
     .memWrite_out(memWrite_EXMEM),
