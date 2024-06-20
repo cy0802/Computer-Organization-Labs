@@ -8,7 +8,10 @@ module Control(
     output reg [1:0] BSel,
     output reg [1:0] ALUOp,
     output reg regWrite,
-    output reg [1:0] writeBackSel
+    output reg [1:0] writeBackSel,
+    output reg hasRs1,
+    output reg hasRs2,
+    output reg hasRd
 );
 
 always @(*) begin
@@ -21,6 +24,9 @@ always @(*) begin
             ALUOp = 2'b00;
             regWrite = 1'b1;
             writeBackSel = 2'b10;
+            hasRs1 = 1'b0;
+            hasRs2 = 1'b0;
+            hasRd = 1'b1;
         end
         7'b1100111: begin // jalr
             memRead = 1'b0;
@@ -30,6 +36,9 @@ always @(*) begin
             ALUOp = 2'b00;
             regWrite = 1'b1;
             writeBackSel = 2'b10;
+            hasRs1 = 1'b1;
+            hasRs2 = 1'b0;
+            hasRd = 1'b1;
         end
         7'b1100011: begin // B type
             memRead = 1'b0;
@@ -39,6 +48,9 @@ always @(*) begin
             ALUOp = 2'b00;
             regWrite = 1'b0;
             writeBackSel = 2'b00; // dont care
+            hasRs1 = 1'b1;
+            hasRs2 = 1'b1;
+            hasRd = 1'b0;
         end
         7'b0000011: begin // lw
             memRead = 1'b1;
@@ -48,6 +60,9 @@ always @(*) begin
             ALUOp = 2'b00;
             regWrite = 1'b1;
             writeBackSel = 2'b00;
+            hasRs1 = 1'b1;
+            hasRs2 = 1'b0;
+            hasRd = 1'b1;
         end
         7'b0100011: begin // S type
             memRead = 1'b0;
@@ -57,6 +72,9 @@ always @(*) begin
             ALUOp = 2'b00;
             regWrite = 1'b0;
             writeBackSel = 2'b00; // dont care
+            hasRs1 = 1'b1;
+            hasRs2 = 1'b1;
+            hasRd = 1'b0;
         end
         7'b0010011: begin // I type
             memRead = 1'b0;
@@ -66,6 +84,9 @@ always @(*) begin
             ALUOp = 2'b11;
             regWrite = 1'b1;
             writeBackSel = 2'b01;
+            hasRs1 = 1'b1;
+            hasRs2 = 1'b0;
+            hasRd = 1'b1;
         end
         7'b0110011: begin // R type
             memRead = 1'b0;
@@ -75,6 +96,9 @@ always @(*) begin
             ALUOp = 2'b10;
             regWrite = 1'b1;
             writeBackSel = 2'b01;
+            hasRs1 = 1'b1;
+            hasRs2 = 1'b1; 
+            hasRd = 1'b1;
         end
         default: begin
             memRead = 1'b0;
@@ -84,6 +108,9 @@ always @(*) begin
             ALUOp = 2'b00;
             regWrite = 1'b0;
             writeBackSel = 2'b00;
+            hasRs1 = 1'b0;
+            hasRs2 = 1'b0;
+            hasRd = 1'b0;
         end
     endcase
 end

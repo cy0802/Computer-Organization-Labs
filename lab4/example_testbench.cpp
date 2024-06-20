@@ -10,7 +10,7 @@ using namespace std;
 
 #include "VPipelineCPU.h"
 
-#define max_cycles 500
+#define max_cycles 2500
 
 VerilatedContext *contextp = new VerilatedContext;
 VerilatedVcdC *m_trace = new VerilatedVcdC;

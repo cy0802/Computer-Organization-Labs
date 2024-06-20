@@ -4,7 +4,7 @@ lab1:
 	verilator --build ./PipelineCPU.v ./ALU.v ./ALUCtrl.v ./Control.v \
 	  ./DataMemory.v ./ImmGen.v ./InstructionMemory.v ./Mux2to1.v ./PC.v  \
 	  ./Register.v ./Adder.v ./BranchCmp.v ./Mux4to1.v ./CtlMux.v ./PipReg32bEn.v \
-	  ./PipReg5b.v ./PipReg32b.v ./PipRegCtl.v ./Forward.v ./HazardDetect.v \
+	  ./PipReg5b.v ./PipReg32b.v ./PipRegCtl.v ./Forward.v ./HazardDetect.v ./PipReg1b.v \
 	   --exe ./example_testbench.cpp -cc --trace -Wall
 	./obj_dir/VPipelineCPU
 
